@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>GTA VI Trophy Rarity Forecast — report</title>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;max-width:1020px;margin:2rem auto;padding:0 1rem;color:#1c1c1e;line-height:1.5}
+  h1{font-size:1.5rem} h2{font-size:1.15rem;margin-top:2rem}
+  .note{background:#f2f2f7;border-left:4px solid #6c6c70;padding:.6rem .9rem;border-radius:6px}
+  table{border-collapse:collapse;width:100%;font-size:.85rem}
+  th,td{border-bottom:1px solid #ddd;padding:.28rem .4rem;text-align:left}
+  th{background:#f2f2f7} td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .bar-row{display:flex;align-items:center;gap:.5rem;margin:.15rem 0;font-size:.82rem}
+  .bar-row .lbl{width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar{height:12px;background:#0a84ff;border-radius:2px}
+  .bar.dil{background:#ff9f0a}.bar.rich{background:#30d158}
+  .legend span{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:.3rem;vertical-align:middle}
+</style>
+</head>
+<body>
+<h1>GTA VI Trophy Rarity Forecast</h1>
+<p>make.fun competition <code>gta6-trophy-rarity-forecast-01</code> — forecast of each
+PlayStation 5 trophy's Exophase earn rate at <strong>2026-11-26 00:00 UTC</strong>.
+Entrypoint: <code>main.py</code>. Method, data sources and validation are in
+<code>README.md</code>. This page shows the model's outputs.</p>
+
+<h2>Story chain — the rates that matter most</h2>
+<p class="legend"><span style="background:#0a84ff"></span>launch-night rate
+<span style="background:#ff9f0a"></span>practice p00 median (target 04:30 UTC, 19 Nov)
+<span style="background:#30d158"></span>synthetic Nov-26 median (fabricated rich history — illustration only)</p>
+<div id="bars"></div>
+<p class="note">Log scale: a trophy's rate is a ratio, earners over tracked players.
+Launch night tracked only 638 players; the first refresh (04:30 UTC, 3,868
+players) dilutes every rate except the 100% intro trophy — the practice
+medians sit near that dilution-implied level. By Nov 26 the launch cohort
+has had 7 days against a 50–80 h story, so chapter rates recover partway
+while grind/platinum trophies stay near zero.</p>
+
+<h2>All 55 trophies</h2>
+<table>
+<thead><tr><th>id</th><th>Trophy</th><th>Last rate<br>(launch night)</th>
+<th>Practice p00 median<br>(target 04:30 UTC)</th><th>Practice q05–q95</th>
+<th>Synthetic Nov-26 median*</th></tr></thead>
+<tbody id="rows"></tbody>
+</table>
+<p class="note">* Synthetic Nov-26 column: model output on a fabricated evolving
+history (launch night → live 30 h snapshot → Nov 26, tracked players
+638 → 90,000). It illustrates final-case behaviour; it is <strong>not</strong> a
+prediction to quote — the real final case is cut at the deadline from the
+house's recording.</p>
+
+<script>
+const D = [
+[1,"Vice Got a Price! (Platinum)",0.63,0.1748,0.0338,0.8989,0.0178],
+[2,"Just Like Paradise",100,99.99,99.9891,99.99,99.99],
+[3,"Paradise Lost (Ch.1)",1.25,0.3467,0.0671,1.7708,1.2735],
+[4,"T**s Ass Drug Money (Ch.2)",1.1,0.3051,0.059,1.561,0.2084],
+[5,"Vice City, Baby! (Ch.3)",1.1,0.3051,0.059,1.561,0.0824],
+[6,"Top Of The World, Ma (Ch.4)",1.1,0.3051,0.059,1.561,0.0758],
+[7,"You Gotta Know When to Get Off (final)",1.1,0.3051,0.059,1.561,0.0684],
+[8,"Trust",1.1,0.3051,0.059,1.561,0.317],
+[9,"Break the Bank",1.1,0.3051,0.059,1.561,0.0708],
+[10,"Family Matters",1.1,0.3051,0.059,1.561,0.0708],
+[11,"DWNFALL",1.1,0.3051,0.059,1.561,0.0708],
+[12,"Hi-Jacked",1.1,0.3051,0.059,1.561,0.0708],
+[13,"Snow Storm",1.1,0.3051,0.059,1.561,0.0708],
+[14,"A Long Road (100%)",0.63,0.1748,0.0338,0.8989,0.0215],
+[15,"Cunning Stunts (250 stunts)",0.63,0.1748,0.0338,0.8989,0.0248],
+[16,"Master of None",0.78,0.2164,0.0418,1.1109,0.0699],
+[17,"The Shootist",0.63,0.1748,0.0338,0.8989,0.0329],
+[18,"Top Fun",0.63,0.1748,0.0338,0.8989,0.0248],
+[19,"Earn Cash, Not Kudos",0.78,0.2164,0.0418,1.1109,0.0487],
+[20,"Baited My Tackle",2.04,1.1833,0.2306,5.8417,2.2691],
+[21,"Stick Fiddler",0.94,0.2607,0.0504,1.3364,0.5472],
+[22,"Road to Rehabilitation",0.78,0.2164,0.0418,1.1109,0.0434],
+[23,"This Was No Boat Accident",0.78,0.2164,0.0418,1.1109,0.0434],
+[24,"The Lone Rider",0.78,0.2164,0.0418,1.1109,0.0434],
+[25,"Strangers & Freaks",0.63,0.1748,0.0338,0.8989,0.0246],
+[26,"Supply & Demand",0.63,0.1748,0.0338,0.8989,0.0304],
+[27,"Spin On This!",0.78,0.2164,0.0418,1.1109,0.0434],
+[28,"Positive Mental Attitude",0.63,0.1748,0.0338,0.8989,0.0278],
+[29,"Fair Game",0.78,0.2164,0.0418,1.1109,0.0403],
+[30,"Don't Touch My Deck",0.63,0.1748,0.0338,0.8989,0.0217],
+[31,"You WAiNKer!",0.63,0.1748,0.0338,0.8989,0.0217],
+[32,"One Last Thing",0.63,0.1748,0.0338,0.8989,0.0248],
+[33,"Hot Together",0.94,0.2607,0.0504,1.3364,0.1243],
+[34,"Retail Therapy",0.78,0.2164,0.0418,1.1109,0.0681],
+[35,"Whip It Good",1.25,0.3467,0.0671,1.7708,0.3589],
+[36,"Gunslinger",0.78,0.2164,0.0418,1.1109,0.0826],
+[37,"Catch Me If You Can",0.94,0.2607,0.0504,1.3364,0.1816],
+[38,"Challenging Tank",1.57,0.4355,0.0844,2.216,0.1656],
+[39,"Sneakthief",0.94,0.2607,0.0504,1.3364,0.0732],
+[40,"Maximum Withdrawal",0.78,0.2164,0.0418,1.1109,0.0379],
+[41,"A Classic Blitz Play",0.94,0.2607,0.0504,1.3364,0.0496],
+[42,"The Goodtime State",0.78,0.2164,0.0418,1.1109,0.0547],
+[43,"Pest Control",0.78,0.2164,0.0418,1.1109,0.0379],
+[44,"In The Beginning…",0.94,0.2607,0.0504,1.3364,0.1142],
+[45,"Capital Offense",0.78,0.2164,0.0418,1.1109,0.0519],
+[46,"Let’s Go Bowling",0.78,0.2164,0.0418,1.1109,0.1298],
+[47,"Personal Best",0.78,0.2164,0.0418,1.1109,0.0454],
+[48,"Actions Speak Louder",0.78,0.2164,0.0418,1.1109,0.0588],
+[49,"Bad Luck, I Guess",0.78,0.2164,0.0418,1.1109,0.0454],
+[50,"The Truth Is Out There",0.78,0.2164,0.0418,1.1109,0.1534],
+[51,"Ten Pin",0.78,0.2164,0.0418,1.1109,0.0759],
+[52,"Dime on the Dollar",0.78,0.2164,0.0418,1.1109,0.0364],
+[53,"Treat Yo Self",0.94,0.2607,0.0504,1.3364,0.0638],
+[54,"Little Boxes",0.78,0.2164,0.0418,1.1109,0.0364],
+[55,"On the Spot",0.78,0.2164,0.0418,1.1109,0.0494]
+];
+document.getElementById("rows").innerHTML = D.map(r =>
+  `<tr><td>${r[0]}</td><td>${r[1]}</td><td class="num">${r[2]}%</td>` +
+  `<td class="num">${r[3]}%</td><td class="num">${r[4]} – ${r[5]}%</td>` +
+  `<td class="num">${r[6]}%</td></tr>`).join("");
+const chain = [3,4,5,6,7,20,21,1,14];
+const bars = document.getElementById("bars");
+chain.forEach(id => {
+  const r = D.find(x => x[0] === id);
+  bars.innerHTML += `<div class="bar-row"><span class="lbl">${r[1]}</span>` +
+    [[r[2],""],[r[3],"dil"],[r[6],"rich"]].map(([v,c]) =>
+      `<span style="width:64px;text-align:right">${v}%</span><span class="bar ${c}" style="width:${Math.max(2,Math.log10(Math.max(v,0.01))+2)*38}px"></span>`).join("") + `</div>`;
+});
+</script>
+</body>
+</html>
